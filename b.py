@@ -18,7 +18,7 @@ def export_data_to_excel():
 
     df = pd.DataFrame(products, columns=columns) 
 
-    df['ExpirationDate'] = pd.to_datetime(df['ExpirationDate'], format='%m/%Y')
+    df['ExpirationDate'] = pd.to_datetime(df['ExpirationDate'])
     df['ExpirationDate'] = df['ExpirationDate'].dt.strftime('%m/%Y')
 
     pivot_df = df.pivot_table(
@@ -27,9 +27,11 @@ def export_data_to_excel():
         columns='ExpirationDate',
         aggfunc='first').reset_index()
 
+    outfile = 'products.xlsx'
     # pivot_df.to_excel(outfile, index=False)
     print(pivot_df)
 
+    print(f'Data exported to {outfile}')
 
 # Gọi hàm để thực hiện việc xuất dữ liệu
 export_data_to_excel()
