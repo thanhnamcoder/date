@@ -25,6 +25,10 @@ def receive_data():
     # Trả về thông báo
     return jsonify({"message": "Data received and saved successfully!"})
 
+from flask import jsonify
+
+from flask import jsonify, abort
+
 @app.route('/export_data', methods=['GET'])
 def export_data():
     conn = sqlite3.connect('products.db')
@@ -34,7 +38,8 @@ def export_data():
     conn.close()
 
     if len(products) == 0:
-        return jsonify({"message": "No data"}), 404
+        # Trả về mã lỗi 404 và thông báo khi không có dữ liệu
+        return jsonify({"error": "No data available"}), 404
 
     columns = ['ID', 'Barcode', 'ProductName', 'ProductQuantity', 'ExpirationDate']  
 
@@ -52,7 +57,10 @@ def export_data():
     # Convert DataFrame to JSON format
     data_json = pivot_df.to_json(orient='records', force_ascii=False)
 
-    return jsonify(json.loads(data_json)), 200
+    return jsonify(json.loads(data_json))
+
+
+
 
 # Function to delete all data from the database
 def delete_all_data():
@@ -62,11 +70,14 @@ def delete_all_data():
     conn.commit()
     conn.close()
 
-# Route to handle deleting all data
-@app.route('/delete_all_data', methods=['POST'])
+@app.route('/delete_all_data', methods=['POST']) 
 def delete_all_data_route():
-    delete_all_data()
-    return jsonify({"message": "All data deleted successfully!"})
+    try:
+        delete_all_data()
+        return '', 200 # 204 No Content
+    except Exception as e:
+        print(e)
+        return jsonify({"error": "Failed to delete data"}), 500 # 500 Internal Server Error
 
 def export_data_to_excel():
     # Kết nối vào cơ sở dữ liệu SQLite và truy vấn dữ liệu
@@ -102,15 +113,7 @@ def export_data_to_excel():
     pivot_df.to_excel(outfile, index=False)
     return outfile
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return 'No file part'
-    file = request.files['file']
-    if file.filename == '':
-        return 'No selected file'
-    file.save(file.filename)
-    return 'File uploaded successfully!'
+
 
 @app.route('/export', methods=['GET'])
 def export_and_send_file():
@@ -120,4 +123,4 @@ def export_and_send_file():
     else:
         return 'No data to export'
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0')
